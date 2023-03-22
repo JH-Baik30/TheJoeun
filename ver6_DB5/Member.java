@@ -48,13 +48,13 @@ public class Member {
 	// 출금 메소드
 	public boolean withDraw(int withDraw) {
 		if (withDraw > balance) {
-			System.out.println("출금 가능액은 " + df.format(balance) + "원 입니다.");
-			System.out.println("저축을 하세요~");
+			System.out.println("출금 가능액은 ₩ " + df.format(balance) + "원 입니다.");
+			System.out.println("저축을 권장합니다.");
 			return false;
 		} else {
 			balance -= withDraw;
-			System.out.println("출금 후 잔액은 " + df.format(withDraw) + " 원입니다.");
-			balance();
+			System.out.println("출금 후 잔액은 ₩ " + df.format(balance) + " 원입니다.");
+//			balance();
 			return true;
 		}
 	}

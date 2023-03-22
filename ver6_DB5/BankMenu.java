@@ -3,23 +3,20 @@ package app.bankProject.ver6_DB5;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class BankMenu {
 	DBmanagement dbm = new DBmanagement();
-//	ArrayList<Member> members;
+	DecimalFormat df = new DecimalFormat("###,###");
 	ArrayList<Member> members = dbm.readfromDB();
-	int accNo;
 	Scanner scanner = new Scanner(System.in);
+	int accNo;
 	int idx;
-	int cnt = 12300;
+	int cnt;
 
-//	public void loadData() throws SQLException {
-//		members = dbm.readfromDB();
-//	}
-	
-	// 로그인
+		// 로그인
 	public Member logIn() {				//////// 로그인할때 인덱스값을 같이 날릴까???
 		System.out.print("계좌 번호를 입력하세요. ");
 		int inputAcc = scanner.nextInt();
@@ -46,7 +43,7 @@ public class BankMenu {
 		String pw = scanner.next();
 		System.out.print("이름을 입력하세요. ");
 		String name = scanner.next();
-		System.out.print("생성된 계좌 번호 " + accNo);
+		System.out.println("생성된 계좌 번호 " + accNo);
 		members.add(new Member(accNo, id, pw, name));
 		dbm.insertToDB(accNo, id, pw, name);
 		members.get(members.size()-1).info();
@@ -56,26 +53,28 @@ public class BankMenu {
 	}
 	
 	// 계좌이체
-	public Member accountTransfer(int x) {
+	public Member accountTransfer(Member logInMember) {
 		Member targetMember = null;		// 이체 대상 선언
 		System.out.println("이체할 대상의 계좌번호를 입력하세요. ");
 		int targetAcc = scanner.nextInt();
 		System.out.println("이체할 금액를 입력하세요. ");
 		int transferMoney = scanner.nextInt();
+		
 		for (int i = 0; i < members.size(); i++) {
 			if (members.get(i).getAccount() == targetAcc) {
-				targetMember = members.get(i);		// 이체 대상 객체 
-				if (members.get(x-cnt).transfer(transferMoney)) {
-					members.get(i).deposit(transferMoney);
-					System.out.println(members.get(i).getName() + "님께 " + transferMoney + "원 송금완료");					
+				targetMember = members.get(i);					// 이체 대상 객체 
+				if (logInMember.transfer(transferMoney)) {		// 계좌 이체 가능 유무 확인
+					targetMember.deposit(transferMoney);		// 대상의 계좌에 송금
+					System.out.println(members.get(i).getName() + "님께  ₩ " + df.format(transferMoney) + "원 송금완료");					
 					dbm.updateToDB(targetMember.getAccount(), targetMember.balance);
-					dbm.updateToDB(members.get(x-cnt).getAccount(), members.get(x-12300).balance);
+					dbm.updateToDB(logInMember.getAccount(), logInMember.balance);
 					break;
 				} 
 				break;
 			}
 		}
-		return members.get(x-cnt);
+		return null;
+//		return members.get(x-cnt);
 	}
 	
 	public void memberList() {
@@ -118,7 +117,7 @@ public class BankMenu {
 				run = false;
 				break;
 			default:
-				System.out.println("잘못입력했습니다");
+				System.out.println("잘 못 입력했습니다");
 			}
 		} while (run);
 	}
@@ -140,6 +139,7 @@ public class BankMenu {
 				System.out.println("입금할 금액을 입력하세요. ");
 				int money = scanner.nextInt();
 				loginuser.deposit(money);
+				System.out.println(" ₩ " + df.format(money) + " 입금완료");
 				dbm.updateToDB(loginuser.getAccount(), loginuser.balance);
 				break;
 			case 2:
@@ -148,13 +148,15 @@ public class BankMenu {
 				Boolean correct = loginuser.withDraw(money);
 				if (correct) {
 					dbm.updateToDB(loginuser.getAccount(), loginuser.balance);
+					
 				}
 				break;
 			case 3:
 				loginuser.balance();
 				break;
 			case 4:
-				accountTransfer(loginuser.getAccount());
+				// 로그인한 유저의 '''계좌번호''' 를 이체 메소드에 보냄.
+				accountTransfer(loginuser);
 				break;
 			case 5:
 				run = false;
